@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="NutriTrack is a simple daily food calorie log that runs entirely in your browser." />
+  <meta name="theme-color" content="#14412f" />
+  <title>NutriTrack – Food Calorie Log</title>
+
+  <!-- Emoji favicon (inline, so no extra file is needed) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🥗%3C/text%3E%3C/svg%3E" />
+
+  <!-- Google Fonts (optional). style.css has system-font fallbacks if these cannot load. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="app">
+
+    <!-- ================= SIDEBAR (desktop) ================= -->
+    <aside class="sidebar">
+      <a class="brand" href="#dashboard">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+            <path d="M7 24C7 13 14 6 26 6c0 12-6 19-15 19-1.6 0-3-.3-4-1Z" fill="currentColor" />
+            <path d="M7 25c3-6 7-10 12-13" stroke="#0b2219" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="brand-text">NutriTrack<small>Food Calorie Log</small></span>
+      </a>
+
+      <nav class="side-nav" aria-label="Main">
+        <a href="#dashboard" data-nav><span class="nav-icon" aria-hidden="true">📊</span><span>Dashboard</span></a>
+        <a href="#add" data-nav><span class="nav-icon" aria-hidden="true">➕</span><span>Add food</span></a>
+        <a href="#log" data-nav><span class="nav-icon" aria-hidden="true">🍽️</span><span>Food log</span></a>
+        <a href="#weekly" data-nav><span class="nav-icon" aria-hidden="true">📈</span><span>Weekly summary</span></a>
+        <a href="#settings" data-nav><span class="nav-icon" aria-hidden="true">⚙️</span><span>Data &amp; info</span></a>
+      </nav>
+
+      <div class="side-foot">
+        <strong>Private by design</strong>
+        Your log is saved only in this browser. Nothing is uploaded.
+      </div>
+    </aside>
+
+    <!-- ================= MAIN AREA ================= -->
+    <div class="main-wrap">
+
+      <!-- Brand bar shown on phones/tablets instead of the sidebar -->
+      <div class="mobile-header">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+            <path d="M7 24C7 13 14 6 26 6c0 12-6 19-15 19-1.6 0-3-.3-4-1Z" fill="currentColor" />
+            <path d="M7 25c3-6 7-10 12-13" stroke="#0b2219" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="brand-text">NutriTrack<small>Food Calorie Log</small></span>
+      </div>
+
+      <main id="main" tabindex="-1">
+
+        <!-- Page heading + date selector -->
+        <div class="topbar">
+          <div>
+            <p class="eyebrow" id="greeting">Hello 👋</p>
+            <h1 id="pageTitle">Today's overview</h1>
+            <p class="subtitle" id="selectedDateLabel"></p>
+          </div>
+
+          <div class="date-controls" role="group" aria-label="Choose the day to view">
+            <button type="button" id="prevDayBtn" class="icon-btn" aria-label="Previous day">‹</button>
+            <label class="sr-only" for="dateInput">Selected date</label>
+            <input type="date" id="dateInput" min="2000-01-01" max="2099-12-31" />
+            <button type="button" id="nextDayBtn" class="icon-btn" aria-label="Next day">›</button>
+            <button type="button" id="todayBtn" class="btn btn-soft">Today</button>
+          </div>
+        </div>
+
+        <!-- Shown only if the browser blocks localStorage -->
+        <div id="storageWarning" class="banner" role="alert" hidden>
+          ⚠️ Your browser is blocking local storage, so entries will be lost when you close or refresh this page.
+        </div>
+
+        <!-- ================= DASHBOARD ================= -->
+        <section id="dashboard" class="section" aria-labelledby="dashboardHeading">
+          <h2 id="dashboardHeading" class="sr-only">Dashboard</h2>
+
+          <div class="hero" id="heroCard">
+            <div class="ring" id="ringWrap" role="img" aria-label="0 percent of the daily target used">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="52" />
+                <circle class="ring-progress" id="ringProgress" cx="60" cy="60" r="52" />
+              </svg>
+              <div class="ring-center">
+                <span id="progressPercent">0%</span>
+                <small>of target</small>
+              </div>
+            </div>
+
+            <div class="hero-body">
+              <p class="hero-label" id="intakeLabel">Today's intake</p>
+              <p class="big-number"><span id="totalCalories">0</span><span class="unit">kcal</span></p>
+              <p class="hero-sub">of <strong id="targetDisplay">2,000</strong> kcal daily target</p>
+              <p class="status-pill" id="statusMessage">No food logged for this day yet.</p>
+
+              <form id="targetForm" class="target-form" novalidate>
+                <label for="targetInput">Daily target (kcal)</label>
+                <div class="target-row">
+                  <input id="targetInput" type="number" inputmode="numeric" min="1000" max="5000" step="50" required aria-describedby="targetError" />
+                  <button type="submit" class="btn btn-lime">Save target</button>
+                </div>
+                <p class="field-error" id="targetError"></p>
+              </form>
+            </div>
+
+            <div class="hero-meals">
+              <h3>Calories by meal</h3>
+              <ul class="meal-breakdown" id="mealBreakdown"></ul>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <article class="stat-card">
+              <span class="stat-icon" aria-hidden="true">🎯</span>
+              <p class="stat-label" id="remainingLabel">Remaining</p>
+              <p class="stat-value"><span id="remainingValue">2,000</span> <small>kcal</small></p>
+            </article>
+            <article class="stat-card">
+              <span class="stat-icon" aria-hidden="true">📝</span>
+              <p class="stat-label">Food entries</p>
+              <p class="stat-value"><span id="entryCount">0</span></p>
+            </article>
+            <article class="stat-card">
+              <span class="stat-icon" aria-hidden="true">⚖️</span>
+              <p class="stat-label">Average per entry</p>
+              <p class="stat-value"><span id="averageCalories">0</span> <small>kcal</small></p>
+            </article>
+          </div>
+        </section>
+
+        <!-- ================= ADD / EDIT FOOD ================= -->
+        <section id="add" class="section card" aria-labelledby="addHeading">
+          <div class="section-head">
+            <div>
+              <h2 id="addHeading"><span id="formTitle">Add food</span></h2>
+              <p class="section-sub">Logging to <strong id="formDateLabel">Today</strong></p>
+            </div>
+            <span class="badge-soft" id="editBadge" hidden>Editing an entry</span>
+          </div>
+
+          <form id="foodForm" novalidate autocomplete="off">
+            <div class="form-grid">
+
+              <div class="field field-wide">
+                <label for="foodPreset">Quick pick (approximate values)</label>
+                <select id="foodPreset" aria-describedby="presetHint"></select>
+                <p class="hint" id="presetHint"></p>
+              </div>
+
+              <div class="field field-wide">
+                <label for="foodName">Food name</label>
+                <input id="foodName" type="text" maxlength="60" required placeholder="e.g. Vegetable upma" aria-describedby="foodNameError" />
+                <p class="field-error" id="foodNameError"></p>
+              </div>
+
+              <div class="field">
+                <label for="mealCategory">Meal</label>
+                <select id="mealCategory" required>
+                  <option value="Breakfast">🌅 Breakfast</option>
+                  <option value="Lunch">🍛 Lunch</option>
+                  <option value="Snack">🍎 Snack</option>
+                  <option value="Dinner">🌙 Dinner</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="quantity">Servings</label>
+                <input id="quantity" type="number" inputmode="decimal" min="0.25" max="100" step="0.25" value="1" required aria-describedby="quantityError" />
+                <p class="field-error" id="quantityError"></p>
+              </div>
+
+              <div class="field">
+                <label for="caloriesPerServing">Calories per serving (kcal)</label>
+                <input id="caloriesPerServing" type="number" inputmode="decimal" min="0" max="5000" step="1" required aria-describedby="caloriesError" />
+                <p class="field-error" id="caloriesError"></p>
+              </div>
+
+              <div class="field">
+                <span class="label" id="formTotalLabel">Total calories</span>
+                <output id="formTotal" class="total-box" aria-labelledby="formTotalLabel" aria-live="off">0 kcal</output>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="submitBtn" class="btn btn-primary">Add to log</button>
+              <button type="button" id="clearFormBtn" class="btn btn-ghost">Clear form</button>
+              <button type="button" id="cancelEditBtn" class="btn btn-ghost" hidden>Cancel edit</button>
+            </div>
+            <p class="note">Sample food values are approximate. Real calories vary with recipe, portion size and brand.</p>
+          </form>
+        </section>
+
+        <!-- ================= FOOD LOG ================= -->
+        <section id="log" class="section card" aria-labelledby="logHeading">
+          <div class="section-head">
+            <div>
+              <h2 id="logHeading" tabindex="-1">Food log</h2>
+              <p class="section-sub" id="logSubtitle"></p>
+            </div>
+            <button type="button" id="clearDayBtn" class="btn btn-danger-soft">Clear this day</button>
+          </div>
+
+          <div class="filters" id="mealFilters" role="group" aria-label="Filter entries by meal">
+            <button type="button" class="chip is-active" data-filter="All" aria-pressed="true">All <span class="chip-count" data-count="All">0</span></button>
+            <button type="button" class="chip" data-filter="Breakfast" aria-pressed="false">🌅 Breakfast <span class="chip-count" data-count="Breakfast">0</span></button>
+            <button type="button" class="chip" data-filter="Lunch" aria-pressed="false">🍛 Lunch <span class="chip-count" data-count="Lunch">0</span></button>
+            <button type="button" class="chip" data-filter="Snack" aria-pressed="false">🍎 Snack <span class="chip-count" data-count="Snack">0</span></button>
+            <button type="button" class="chip" data-filter="Dinner" aria-pressed="false">🌙 Dinner <span class="chip-count" data-count="Dinner">0</span></button>
+          </div>
+
+          <!-- Friendly empty state (filled and toggled by script.js) -->
+          <div id="emptyState" class="empty" hidden>
+            <div class="empty-art" aria-hidden="true">🥗</div>
+            <h3 id="emptyTitle">Nothing logged yet</h3>
+            <p id="emptyText">Add your first meal and your calories will start adding up.</p>
+            <button type="button" id="emptyActionBtn" class="btn btn-primary" data-mode="add">Add food</button>
+          </div>
+
+          <div class="table-wrap" id="tableWrap">
+            <table class="log-table" role="table">
+              <caption class="sr-only">Food entries for the selected day</caption>
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader" scope="col">Food</th>
+                  <th role="columnheader" scope="col">Quantity</th>
+                  <th role="columnheader" scope="col">Meal</th>
+                  <th role="columnheader" scope="col" class="col-num">Calories</th>
+                  <th role="columnheader" scope="col" class="col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="logBody" role="rowgroup"></tbody>
+            </table>
+          </div>
+          <p class="log-summary" id="logSummary" aria-live="polite"></p>
+        </section>
+
+        <!-- ================= WEEKLY SUMMARY ================= -->
+        <section id="weekly" class="section card" aria-labelledby="weeklyHeading">
+          <div class="section-head">
+            <div>
+              <h2 id="weeklyHeading">Weekly summary</h2>
+              <p class="section-sub" id="weekRange"></p>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <span><i class="dot dot-ok"></i>Within target</span>
+              <span><i class="dot dot-over"></i>Over target</span>
+              <span><i class="dash"></i>Target</span>
+            </div>
+          </div>
+
+          <div class="week-stats">
+            <div class="mini-stat"><span class="mini-label">Week total</span><span class="mini-value"><span id="weekTotal">0</span> kcal</span></div>
+            <div class="mini-stat"><span class="mini-label">Daily average</span><span class="mini-value"><span id="weekAverage">0</span> kcal</span></div>
+            <div class="mini-stat"><span class="mini-label">Days within target</span><span class="mini-value" id="weekOnTarget">–</span></div>
+          </div>
+
+          <div class="chart" role="group" aria-label="Calories per day for this week. Select a bar to open that day.">
+            <div class="chart-grid">
+              <div class="target-line" id="targetLine"><span id="targetLabel">Target</span></div>
+            </div>
+            <div class="chart-cols" id="chartCols"></div>
+          </div>
+        </section>
+
+        <!-- ================= DATA & INFO ================= -->
+        <section id="settings" class="section card" aria-labelledby="settingsHeading">
+          <h2 id="settingsHeading">Data &amp; info</h2>
+          <div class="settings-grid">
+            <div>
+              <h3>Reset demo data</h3>
+              <p>Replace everything saved in this browser with a week of sample entries and a 2,000 kcal target. Your current logs will be lost.</p>
+              <button type="button" id="resetDemoBtn" class="btn btn-danger">Reset demo data</button>
+            </div>
+            <div>
+              <h3>Where is my data?</h3>
+              <p>Entries and your target are stored with the browser's localStorage, grouped by calendar date. Clearing site data or using another browser or device starts a fresh log.</p>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <p>⚠️ Calorie values are estimates, and the daily target is not personalised medical or dietary advice. Talk to a doctor or registered dietitian for guidance that fits you.</p>
+          <p>NutriTrack – BSc Computer Science capstone mini project. Built with HTML, CSS and JavaScript.</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- ================= MOBILE BOTTOM NAV ================= -->
+  <nav class="bottom-nav" aria-label="Mobile">
+    <a href="#dashboard" data-nav><span class="nav-icon" aria-hidden="true">📊</span><span>Dashboard</span></a>
+    <a href="#add" data-nav><span class="nav-icon" aria-hidden="true">➕</span><span>Add</span></a>
+    <a href="#log" data-nav><span class="nav-icon" aria-hidden="true">🍽️</span><span>Log</span></a>
+    <a href="#weekly" data-nav><span class="nav-icon" aria-hidden="true">📈</span><span>Week</span></a>
+    <a href="#settings" data-nav><span class="nav-icon" aria-hidden="true">⚙️</span><span>Data</span></a>
+  </nav>
+
+  <!-- Toast messages appear here -->
+  <div id="toastRegion" class="toast-region" role="status" aria-live="polite"></div>
+
+  <!-- Confirmation dialog (used for Clear day and Reset demo data) -->
+  <dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <form method="dialog" class="dialog-body">
+      <h2 id="confirmTitle">Are you sure?</h2>
+      <p id="confirmMessage"></p>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn btn-ghost" autofocus>Cancel</button>
+        <button type="submit" value="confirm" id="confirmOkBtn" class="btn btn-danger">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
